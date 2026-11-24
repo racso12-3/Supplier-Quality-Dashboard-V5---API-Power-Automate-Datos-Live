@@ -1,0 +1,105 @@
+=====================================================================
+ CAMBIO DE RUTA EN SHAREPOINT - NINE PANELS / PANEL 6 CHARGEBACK
+=====================================================================
+Fecha: 2026-11-24
+
+RUTA NUEVA (carpeta destino)
+  Sitio:   https://sricloud.sharepoint.com/sites/Quality
+  Biblioteca: Supplier Quality Shared Documents
+  Carpeta:    Supplier Quality Monthly Reports / 2026 SRE JRZ Iniciatives / Version 4
+
+  Ruta relativa al servidor (sin codificar):
+  /sites/Quality/Supplier Quality Shared Documents/Supplier Quality Monthly Reports/2026 SRE JRZ Iniciatives/Version 4
+
+  Archivos que escribe el flujo ahi:
+    - datos-live.json
+    - index.html
+
+=====================================================================
+ 1) LINEAS PARA index.html
+=====================================================================
+Busca el bloque (esta alrededor de la linea 1099) y reemplazalo
+COMPLETO por estas 3 lineas:
+
+  var SITIO = "https://sricloud.sharepoint.com/sites/Quality";
+  var RUTA = "/sites/Quality/Supplier%20Quality%20Shared%20Documents/Supplier%20Quality%20Monthly%20Reports/2026%20SRE%20JRZ%20Iniciatives/Version%204/datos-live.json";
+  var ABSOLUTO = SITIO + "/Supplier%20Quality%20Shared%20Documents/Supplier%20Quality%20Monthly%20Reports/2026%20SRE%20JRZ%20Iniciatives/Version%204/datos-live.json";
+
+Reglas:
+  - SITIO va sin "/" al final.
+  - RUTA y ABSOLUTO llevan los espacios como %20.
+  - NO cambies API_ABSOLUTA: se arma sola con SITIO + RUTA.
+  - Si cambias el nombre del archivo, cambia tambien:
+        var ARCHIVO = "datos-live.json";
+
+
+=====================================================================
+ 2) FLUJO - Accion "Escribir_JSON"
+=====================================================================
+En el diseñador: accion Escribir_JSON -> Mostrar entradas avanzadas.
+
+dataset:
+  https://sricloud.sharepoint.com/sites/Quality
+
+parameters/uri:
+  _api/web/GetFolderByServerRelativeUrl('/sites/Quality/Supplier%20Quality%20Shared%20Documents/Supplier%20Quality%20Monthly%20Reports/2026%20SRE%20JRZ%20Iniciatives/Version%204')/Files/Add(url='datos-live.json',overwrite=true)
+
+parameters/headers:
+  Accept: application/json;odata=nometadata
+  Content-Type: application/json;odata=nometadata
+
+
+=====================================================================
+ 3) FLUJO - Accion "Escribir_HTML"
+=====================================================================
+dataset:
+  https://sricloud.sharepoint.com/sites/Quality
+
+parameters/uri:
+  _api/web/GetFolderByServerRelativeUrl('/sites/Quality/Supplier%20Quality%20Shared%20Documents/Supplier%20Quality%20Monthly%20Reports/2026%20SRE%20JRZ%20Iniciatives/Version%204')/Files/Add(url='index.html',overwrite=true)
+
+parameters/headers:
+  Accept: application/json;odata=nometadata
+  Content-Type: text/html
+
+
+=====================================================================
+ 4) FLUJO - Accion "Plantilla_HTML"
+=====================================================================
+El flujo reconstruye index.html desde esta accion en cada corrida
+(cada 15 minutos). Por eso la plantilla tambien debe llevar las
+3 lineas del punto 1.
+
+Si editas el HTML local, copia TODO el archivo a Plantilla_HTML.
+Conserva exactamente una vez cada marcador:
+  /*LIVE-INICIO*/
+  /*LIVE-FIN*/
+Si faltan o se duplican, Compose_HTML genera un HTML roto.
+
+OJO: la plantilla del ZIP original estaba una version atras
+(le faltaba el filtro "All" del Panel 6). En el ZIP nuevo que te
+deje, la plantilla ya es el index.html actualizado.
+
+
+=====================================================================
+ 5) CHECKLIST DE DESPLIEGUE
+=====================================================================
+[ ] La carpeta destino ya existe en SharePoint.
+    (Files/Add NO crea carpetas; si no existe, falla la accion.)
+[ ] La conexion de SharePoint del flujo tiene permiso en /sites/Quality.
+    Si es otra coleccion/sitio, reautoriza la conexion.
+[ ] Guardar el flujo y ejecutar "Run" manual.
+[ ] Verificar en la carpeta: datos-live.json e index.html con fecha nueva.
+[ ] Abrir index.html y probar Panel 2, Panel 6 (incluido filtro "All") y Panel 7.
+[ ] Copiar ayuda.html a la carpeta nueva (el boton "Help & metrics" es relativo).
+[ ] Desactivar copias viejas del flujo para que no sobrescriban.
+
+
+=====================================================================
+ RESUMEN DE LO YA APLICADO
+=====================================================================
+- index.html: SITIO, RUTA y ABSOLUTO actualizados a /sites/Quality.
+- Flujo: Escribir_JSON y Escribir_HTML apuntan a la carpeta nueva.
+- Flujo: Plantilla_HTML reemplazada por el index.html actual (con filtro "All").
+- ZIP nuevo: NinePanels-DatosLive-Quality.zip
+  (el ZIP original quedo intacto)
